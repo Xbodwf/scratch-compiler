@@ -18,12 +18,12 @@ npm install github:xbodwf/scratch-compiler -g
 
 Decompile a project:
 ```bash
-sccd <path_to_sb3> -d <dist_folder>
+scc path_to_sb3 -d dist_folder
 ```
 
 Compile a project:
 ```bash
-scc -p <path_tofolder>/scconfig.json
+scc -p path_to_folder/scconfig.json
 ```
 
 ## Usage
@@ -35,24 +35,24 @@ scc -p <path_tofolder>/scconfig.json
 {
   // Scratch Compiler Configuration
   "compilerOptions": {
-    // Target format: "atchBlocks" compiles to Scratch blocks(sb3), "sprites" compiles to sprite format(.sprite3)
+    // Target format: "scratchBlocks" compiles to Scratch blocks(sb3), "sprites" compiles to sprite format(.sprite3)
     //Warning: option "sprites" is wip
     "target": "scratchBlocks",
 
-    // Force MD5 extension format for assets (e.g., 0e56a.png instead of abc123)
+    // Force MD5 extension format for assets (e.g., 0e556a.png instead of abc123)
     "forceUseMD5Extension": true,
 
-    // Output directory for compiled .sb3
+    // Output directory for compiled .sb3 file
     "outDir": "./dist",
 
     // Root directory of the Scratch project (contains root.json and sprite folders)
-    rootDir": "./",
+    "rootDir": "./",
 
     // Extension resolution strategy:
     // - "bundler": Bundle extensions into the project
-    // - "onlyurl": Only allow online extensions (URL references)
+    // - "only-url": Only allow online extensions (URL references)
     // - "file-and-url": Bundle extensions as data URLs
-    "extensionResolution": "bler"
+    "extensionResolution": "bundler"
   }
 }
 ```
@@ -64,7 +64,7 @@ If `package.json` and `tsconfig.json` do not exist, they will be created along w
 
 Then you can go on with:
 ```bash
-cd <dist_folder>
+cd dist_folder
 
 npm install
 ```

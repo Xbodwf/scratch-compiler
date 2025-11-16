@@ -19,12 +19,12 @@ npm install github:xbodwf/scratch-compiler -g
 
 反编译项目:
 ```bash
-scc -d <path_to_sb3> -d <dist_folder>
+scc -d path_to_sb3 -d dist_folder
 ```
 
 编译项目:
 ```bash
-scc -p <path_to_folder>/scconfig.json
+scc -p path_to_folder/scconfig.json
 ```
 
 
@@ -66,7 +66,7 @@ scc -p <path_to_folder>/scconfig.json
 
 然后您再进行:
 ```bash
-cd <dist_folder>
+cd dist_folder
 
 npm install
 ```
