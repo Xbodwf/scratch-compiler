@@ -1,9 +1,0 @@
-{
-  "compilerOptions": {
-    "target": "scratchBlocks",
-    "forceUseMD5Extension": true,
-    "outDir": "./dist",
-    "rootDir": "./",
-    "extensionResolution": "bundler"
-  }
-}
