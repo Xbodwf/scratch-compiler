@@ -1,0 +1,54 @@
+{
+    "name": "scratch-compiler",
+    "version": "1.1.0",
+    "main": "dist/src/index.js",
+    "types": "dist/src/index.d.ts",
+    "type": "module",
+    "scripts": {
+        "tsc": "tsc",
+        "build": "tsc",
+        "dev": "tsc --watch",
+        "clean": "rm -rf dist"
+    },
+    "keywords": [
+        "scratch",
+        "scc",
+        "scratch-compiler",
+        "scratch-decompiler"
+    ],
+    "files": [
+        "dist/"
+    ],
+    "bin": {
+        "scc": "dist/src/cli.js"
+    },
+    "author": "Xbodwf",
+    "license": "BSD-3-Clause",
+    "homepage": "https://xbodwf.github.io/packages/scratch-compiler/",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Xbodwf/scratch-compiler.git"
+    },
+    "bugs": "https://github.com/Xbodwf/scratch-compiler/issues",
+    "description": "A compiler for Scratch Projects",
+    "devDependencies": {
+        "@types/babel__generator": "^7.27.0",
+        "@types/cli-progress": "^3.11.6",
+        "@types/minimist": "^1.2.5",
+        "@types/node": "^20.11.0"
+    },
+    "dependencies": {
+        "@babel/core": "^7.23.0",
+        "@babel/generator": "^7.23.0",
+        "@babel/types": "^7.23.0",
+        "chalk": "^5.3.0",
+        "cli-progress": "^3.12.0",
+        "fs": "0.0.1-security",
+        "jsonc-parser": "^3.2.0",
+        "jszip": "^3.10.1",
+        "minimist": "^1.2.8",
+        "path": "0.12.7",
+        "reflect-metadata": "^0.2.1",
+        "typescript": "5.9.3"
+    }
+}

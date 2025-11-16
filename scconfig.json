@@ -1,0 +1,22 @@
+{
+  // Scratch Compiler Configuration
+  "compilerOptions": {
+    // Target format: "scratchBlocks" compiles to Scratch blocks, "sprites" compiles to sprite format
+    "target": "scratchBlocks",
+
+    // Force MD5 extension format for assets (e.g., abc123.png instead of abc123)
+    "forceUseMD5Extension": true,
+
+    // Output directory for compiled .sb3 file
+    "outDir": "./dist",
+
+    // Root directory of the Scratch project (contains root.json and sprite folders)
+    "rootDir": "./",
+
+    // Extension resolution strategy:
+    // - "bundler": Bundle extensions into the project
+    // - "only-url": Only allow online extensions (URL references)
+    // - "file-and-url": Bundle extensions as data URLs
+    "extensionResolution": "bundler"
+  }
+}

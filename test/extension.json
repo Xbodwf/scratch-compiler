@@ -1,0 +1,23 @@
+{
+    "slug": "ccwPolyfill",
+    "id": "ccwpolyfill",
+    "name": "CCW-Polyfill",
+    "description": "在Turbowarp中加载CCW扩展的前置扩展",
+    "nameTranslations": {
+        "en": "CCW-Polyfill",
+        "zh-cn": "CCW-Polyfill"
+    },
+    "descriptionTranslations": {
+        "en": "A bootstrap extension for CCW extensions loader in Turbowarp",
+        "zh-cn": "在Turbowarp中加载CCW扩展的前置扩展"
+    },
+    "image": "ccw.svg",
+    "by": [
+        {
+            "name": "Xbodwf",
+            "link": "https://github.com/xbodwf"
+        }
+    ],
+    "docs": false,
+    "samples": ["ccwpolyfill"]
+}
