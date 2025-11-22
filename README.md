@@ -1,4 +1,4 @@
-![Scratch Compiler](https://socialify.git.ci/Xbodwf/scratch-compiler/image?custom_description=An scratch project compiler&custom_language=Typescript&description=1&font=JetBrains+Mono&forks=1&issues=1&language=1&name=1&pulls=1&stargazers=1&theme=Auto)
+![Scratch Compiler](https://socialify.git.ci/Xbodwf/scratch-compiler/image?custom_description=An+scratch+project+compiler&custom_language=ts&description=1&font=JetBrains+Mono&forks=1&issues=1&language=1&name=1&pulls=1&stargazers=1&theme=Auto)
 
 
 # scratch-compiler
