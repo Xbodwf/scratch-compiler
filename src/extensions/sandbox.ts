@@ -1,4 +1,5 @@
 import JSZip from "jszip"
+
 export interface ScratchExtensionInfo {
   id: string
   name: string
@@ -81,7 +82,6 @@ export const ScratchGlobal = {
     SPRITE: "sprite",
     STAGE: "stage",
   },
-  // Placeholder methods that return promises
   canEmbed: () => Promise.resolve(true),
   canFetch: () => Promise.resolve(true),
   canGeolocate: () => Promise.resolve(true),
@@ -93,7 +93,6 @@ export const ScratchGlobal = {
   canRedirect: () => Promise.resolve(true),
   extensions: {
     register: (extension: any) => {
-      // Extension registration handler
       return extension
     },
     unsandboxed: true,
@@ -112,13 +111,9 @@ export const ScratchGlobal = {
     },
   ),
   vm: {
-    blockListener: () => {
-      // Placeholder for block listener
-    },
+    blockListener: () => {},
     deleteSprite: (spriteId: string) => {},
-
     dupclicateSprite: (spriteId: string) => {},
-
     editingTarget: () => {},
     exports: {
       JSZip,
@@ -170,7 +165,6 @@ export const ScratchGlobal = {
     initialized: true,
     installTargets: () => {},
     monitorBlockListener: () => {},
-
     runtime: {
       addCloudVariable: (varName: string) => {},
       addonBlocks: {
@@ -305,7 +299,6 @@ export const ScratchGlobal = {
     on: (event: string, callback: () => void) => {},
     off: (event: string, callback: () => void) => {},
   },
-
   securityManager: {
     canLoadUnsafeExtensions: () => true,
     canEmbed: () => Promise.resolve(true),
@@ -346,44 +339,36 @@ export const ScratchGlobal = {
   ): void {},
 }
 
-// Also provide ScratchExtensions alias
 export const ScratchExtensions = {
   register: ScratchGlobal.extensions.register,
 }
 
 /**
  * Load and analyze a Scratch extension
- * @param extensionCode - The extension JavaScript code
- * @returns Extension info from getInfo()
  */
 export async function loadExtension(extensionCode: string): Promise<ScratchExtensionInfo | null> {
   try {
-    // Create a sandbox environment
     const sandbox = {
       Scratch: ScratchGlobal,
       ScratchExtensions: ScratchExtensions,
       console: console,
       window: globalThis,
     }
-    globalThis.addEventListener = ScratchGlobal.addEventListener as any
+    ;(globalThis as any).addEventListener = ScratchGlobal.addEventListener as any
 
     let extensionInstance: any = null
 
-    // Override register to capture the extension instance
     const originalRegister = ScratchGlobal.extensions.register
     ScratchGlobal.extensions.register = (extension: any) => {
       extensionInstance = extension
       return extension
     }
 
-    // Execute the extension code in the sandbox
     const func = new Function(...Object.keys(sandbox), extensionCode)
     func(...Object.values(sandbox))
 
-    // Restore original register
     ScratchGlobal.extensions.register = originalRegister
 
-    // Get extension info
     if (extensionInstance && typeof extensionInstance.getInfo === "function") {
       const info = extensionInstance.getInfo()
       return info
@@ -397,47 +382,8 @@ export async function loadExtension(extensionCode: string): Promise<ScratchExten
 }
 
 /**
- * Generate TypeScript definition file for an extension
- * @param info - Extension info from getInfo()
- * @returns TypeScript definition code
+ * Map Scratch argument type to TypeScript type
  */
-export function generateExtensionDTS(info: ScratchExtensionInfo): string {
-  const lines: string[] = []
-
-  lines.push(`// Auto-generated TypeScript definitions for ${info.name} extension`)
-  lines.push(`// Extension ID: ${info.id}`)
-  lines.push(``)
-  lines.push(`declare namespace ${info.id} {`)
-
-  // Generate function declarations for each block
-  for (const block of info.blocks) {
-    const args: string[] = []
-
-    if (block.arguments) {
-      for (const [argName, argDef] of Object.entries(block.arguments)) {
-        const argType = (argDef as any).type || "any"
-        const tsType = mapScratchTypeToTS(argType)
-        args.push(`${argName}: ${tsType}`)
-      }
-    }
-
-    const returnType = mapBlockTypeToReturnType(block.blockType)
-    const argsStr = args.length > 0 ? args.join(", ") : ""
-
-    lines.push(`  /**`)
-    lines.push(`   * ${block.text}`)
-    lines.push(`   */`)
-    lines.push(`  function ${block.opcode}(${argsStr}): ${returnType}`)
-    lines.push(``)
-  }
-
-  lines.push(`}`)
-  lines.push(``)
-  lines.push(`export default ${info.id}`)
-
-  return lines.join("\n")
-}
-
 function mapScratchTypeToTS(scratchType: string): string {
   const typeMap: Record<string, string> = {
     number: "number",
@@ -451,29 +397,38 @@ function mapScratchTypeToTS(scratchType: string): string {
   return typeMap[scratchType] || "any"
 }
 
+/**
+ * Map block type to return type
+ */
 function mapBlockTypeToReturnType(blockType: string): string {
   const typeMap: Record<string, string> = {
     command: "void",
     reporter: "any",
     Boolean: "boolean",
     hat: "void",
+    loop: "void",
+    conditional: "void",
   }
   return typeMap[blockType] || "void"
 }
 
 /**
  * Generate TypeScript wrapper module for an extension
- * @param info - Extension info from getInfo()
- * @param extensionId - Extension ID
- * @returns TypeScript wrapper code
+ * Uses the same recordBlock mechanism as built-in blocks
  */
 export function generateExtensionWrapper(info: ScratchExtensionInfo, extensionId: string): string {
   const lines: string[] = []
 
   lines.push(`// Auto-generated TypeScript wrapper for ${info.name} extension`)
   lines.push(`// Extension ID: ${info.id}`)
-  lines.push(`import { recordExtensionBlock } from "../runtime/blockRecorder.js"`)
+  lines.push(`// Generated by scratch-compiler`)
   lines.push(``)
+  lines.push(`import { recordBlock, getCurrentBlockContext } from "scratch-compiler/dist/src/runtime/blockRecorder.js"`)
+  lines.push(``)
+  lines.push(`/**`)
+  lines.push(` * ${info.name} Extension`)
+  lines.push(` * Extension ID: ${info.id}`)
+  lines.push(` */`)
   lines.push(`const ${info.id} = {`)
 
   // Generate wrapper functions for each block
@@ -495,29 +450,49 @@ export function generateExtensionWrapper(info: ScratchExtensionInfo, extensionId
 
     lines.push(`  /**`)
     lines.push(`   * ${block.text}`)
+    lines.push(`   * Block type: ${block.blockType}`)
     lines.push(`   */`)
     lines.push(`  ${block.opcode}(${argsStr}): ${returnType} {`)
 
+    // Use recordBlock like built-in blocks
     if (argNames.length > 0) {
-      const argsArray = argNames.join(", ")
-      lines.push(`    return recordExtensionBlock("${info.id}", "${block.opcode}", [${argsArray}]) as ${returnType}`)
+      const inputsObj = argNames
+        .map((name, idx) => `    INPUT${idx}: [1, ${name}]`)
+        .join(",\n")
+
+      lines.push(`    const inputs: Record<string, any> = {`)
+      lines.push(`${inputsObj}`)
+      lines.push(`    }`)
+      lines.push(`    return recordBlock("${info.id}", "${block.opcode}", inputs, {}) as ${returnType}`)
     } else {
-      lines.push(`    return recordExtensionBlock("${info.id}", "${block.opcode}", []) as ${returnType}`)
+      lines.push(`    return recordBlock("${info.id}", "${block.opcode}", {}, {}) as ${returnType}`)
     }
 
     lines.push(`  },`)
     lines.push(``)
   }
 
-  // Generate menu functions if they exist
+  // Generate menu helpers if they exist
   if (info.menus) {
     for (const [menuName, menuDef] of Object.entries(info.menus)) {
+      const items = Array.isArray(menuDef)
+        ? menuDef
+        : (menuDef as any).items || []
+
       lines.push(`  /**`)
       lines.push(`   * Menu: ${menuName}`)
       lines.push(`   */`)
-      lines.push(`  menu_${menuName}(value: string | any): string | any {`)
-      lines.push(`    return value`)
-      lines.push(`  },`)
+      lines.push(`  menu_${menuName}: {`)
+      if (Array.isArray(items)) {
+        items.forEach((item: any) => {
+          if (typeof item === "string") {
+            lines.push(`    "${item}": "${item}",`)
+          } else if (item && item.value) {
+            lines.push(`    "${item.value}": "${item.text || item.value}",`)
+          }
+        })
+      }
+      lines.push(`  } as const,`)
       lines.push(``)
     }
   }
@@ -530,10 +505,8 @@ export function generateExtensionWrapper(info: ScratchExtensionInfo, extensionId
 }
 
 /**
- * Process extensions from project.json and save them to sources and extensions directories
- * @param extensions - Extensions object from project.json
- * @param outputDir - Output directory for extensions
- * @returns Map of extension ID to extension info
+ * Process extensions from project.json
+ * Generates TypeScript wrappers instead of .d.ts files
  */
 export async function processExtensions(
   extensions: Record<string, string>,
@@ -549,21 +522,21 @@ export async function processExtensions(
   await fs.mkdir(extensionsDir, { recursive: true })
 
   const extensionMap = new Map<string, ScratchExtensionInfo>()
-  let extensionsInstance = extensions || {};
+  const extensionsInstance = extensions || {}
+
   for (const [extensionId, extensionUrl] of Object.entries(extensionsInstance)) {
     try {
       let extensionCode: string
 
       // Check if it's a data URL
       if (extensionUrl.startsWith("data:")) {
-        // Extract code from data URL
         const base64Data = extensionUrl.split(",")[1]
         extensionCode = Buffer.from(base64Data, "base64").toString("utf-8")
 
         const filename = `${extensionId}.js`
         await fs.writeFile(path.join(sourcesDir, filename), extensionCode)
       } else {
-        // It's a URL, fetch it
+        // Fetch from URL
         const response = await fetch(extensionUrl)
         extensionCode = await response.text()
 
@@ -577,12 +550,11 @@ export async function processExtensions(
       if (info) {
         extensionMap.set(extensionId, info)
 
+        // Generate TypeScript wrapper (not .d.ts)
         const wrapper = generateExtensionWrapper(info, extensionId)
         await fs.writeFile(path.join(extensionsDir, `${extensionId}.ts`), wrapper)
 
-        // Also generate .d.ts for type checking
-        const dts = generateExtensionDTS(info)
-        await fs.writeFile(path.join(extensionsDir, `${extensionId}.d.ts`), dts)
+        console.log(`[Extension] Generated ${extensionId}.ts`)
       }
     } catch (error) {
       console.error(`Failed to process extension ${extensionId}:`, error)
@@ -594,9 +566,6 @@ export async function processExtensions(
 
 /**
  * Generate import statements for extensions used by a sprite
- * @param blocks - Sprite's blocks
- * @param extensionMap - Map of extension ID to extension info
- * @returns Array of import statements
  */
 export function generateExtensionImports(
   blocks: Record<string, any>,
@@ -605,27 +574,27 @@ export function generateExtensionImports(
   const usedExtensions = new Set<string>()
 
   // Scan blocks to find which extensions are used
+  const builtInNamespaces = [
+    "motion",
+    "looks",
+    "sound",
+    "event",
+    "control",
+    "sensing",
+    "operator",
+    "data",
+    "pen",
+    "music",
+    "procedures",
+    "argument",
+  ]
+
   for (const block of Object.values(blocks)) {
     if (block && typeof block === "object" && block.opcode) {
       const opcode = block.opcode as string
-
-      // Check if opcode belongs to an extension (not a built-in namespace)
-      const builtInNamespaces = [
-        "motion",
-        "looks",
-        "sound",
-        "event",
-        "control",
-        "sensing",
-        "operator",
-        "data",
-        "pen",
-        "music",
-      ]
-
       const namespace = opcode.split("_")[0]
+
       if (!builtInNamespaces.includes(namespace)) {
-        // This is an extension block
         usedExtensions.add(namespace)
       }
     }
@@ -635,9 +604,7 @@ export function generateExtensionImports(
   const imports: string[] = []
   for (const extId of usedExtensions) {
     if (extensionMap.has(extId)) {
-      // NOTE: Sprite files are at src/<sprite>/index.ts, extensions live at <out>/extensions
-      // We need to traverse two levels up to reach the extensions dir.
-      imports.push(`/// <reference path="@/extensions/${extId}.d.ts" />`)
+      imports.push(`import ${extId} from "@/extensions/${extId}"`)
     }
   }
 

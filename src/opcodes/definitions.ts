@@ -3,7 +3,7 @@
 
 export interface OpcodeArg {
   name: string
-  type: "any" | "bool" | "field" | "substack"
+  type: "any" | "bool" | "field" | "substack" | "string"
   menu?: Record<string, string> | null
 }
 
@@ -12,6 +12,7 @@ export interface OpcodeDefinition {
   type: "void" | "any" | "bool" | "hat" | "substack"
   args: OpcodeArg[]
   fields?: Record<string, string>
+  special?: boolean // Mark blocks that need special handling
 }
 
 export interface OpcodeNamespace {
@@ -426,7 +427,7 @@ export const SCRATCH_OPCODES: Record<string, OpcodeNamespace> = {
       type: "void",
       args: [{ name: "SUBSTACK", type: "substack" }],
     },
-    if: {
+    _if: {
       opcode: "control_if",
       type: "void",
       args: [
@@ -946,13 +947,57 @@ export const SCRATCH_OPCODES: Record<string, OpcodeNamespace> = {
       args: [],
     },
   },
+  procedures: {
+    // procedures_definition is special - it defines a custom block
+    // The proccode and arguments are stored in mutation
+    definition: {
+      opcode: "procedures_definition",
+      type: "hat",
+      args: [{ name: "custom_block", type: "any" }],
+      special: true, // Mark as special handling needed
+    },
+    // procedures_prototype is a shadow block for the definition
+    prototype: {
+      opcode: "procedures_prototype",
+      type: "any",
+      args: [],
+      special: true,
+    },
+    // procedures_call calls a custom block by proccode
+    call: {
+      opcode: "procedures_call",
+      type: "void",
+      args: [], // Arguments are dynamic based on mutation
+      special: true,
+    },
+  },
+  argument: {
+    // argument reporter - gets the value of a custom block argument
+    reporter: {
+      opcode: "argument_reporter",
+      type: "any",
+      args: [{ name: "VALUE", type: "string" }],
+      special: true,
+    },
+    // argument reporter string number
+    reporterStringNumber: {
+      opcode: "argument_reporter_string_number",
+      type: "any",
+      args: [{ name: "VALUE", type: "string" }],
+      special: true,
+    },
+  },
 }
 
 // Create a reverse lookup map: opcode -> definition
 export const OPCODE_MAP: Map<string, OpcodeDefinition> = new Map()
 
+// Create a reverse lookup map: opcode -> method key (e.g., "control_if" -> "_if")
+export const OPCODE_TO_METHOD_MAP: Map<string, string> = new Map()
+
 for (const namespace of Object.values(SCRATCH_OPCODES)) {
-  for (const def of Object.values(namespace)) {
+  for (const [key, def] of Object.entries(namespace)) {
     OPCODE_MAP.set(def.opcode, def)
+    OPCODE_TO_METHOD_MAP.set(def.opcode, key)
   }
 }

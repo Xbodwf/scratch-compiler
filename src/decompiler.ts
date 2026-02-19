@@ -88,6 +88,20 @@ export async function decompileFromJSON(input: ScratchProject, out: string) {
     const { processExtensions } = await import("./extensions/sandbox.js")
     extensionMap = await processExtensions(input.extensionURLs!, out)
     console.log(chalk.green(`[Processed] ${extensionMap.size} extension(s)`))
+
+    // Create extensions.json for compilation reference
+    const extensionsConfig: Record<string, { localPath: string; originalUrl?: string }> = {}
+    if (input.extensionURLs) {
+      for (const [extId, extUrl] of Object.entries(input.extensionURLs)) {
+        extensionsConfig[extId] = {
+          localPath: `./sources/${extId}.js`, // Local JS source file (stored in sources/)
+          originalUrl: extUrl,
+        }
+      }
+    }
+    const extensionsJsonPath = path.join(out, "extensions.json")
+    fs.writeFileSync(extensionsJsonPath, JSON.stringify(extensionsConfig, null, 2))
+    console.log(chalk.green(`[Generated] extensions.json`))
   }
 
   const tsGenerator = new TSCodeGenerator()

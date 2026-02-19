@@ -1,288 +1,504 @@
 // Auto-generated TypeScript runtime for Scratch built-in blocks
+// Based on src/opcodes/definitions.ts
 // These functions record block calls during compilation
 
 import { recordBlock, getCurrentBlockContext } from "./blockRecorder.js"
+import { SCRATCH_OPCODES, OPCODE_MAP, type OpcodeDefinition } from "../opcodes/definitions.js"
 
-export const motion = {
-  movesteps: (steps: number | any) => recordBlock("motion", "movesteps", { STEPS: [1, steps] }),
-  turnright: (degrees: number | any) => recordBlock("motion", "turnright", { DEGREES: [1, degrees] }),
-  turnleft: (degrees: number | any) => recordBlock("motion", "turnleft", { DEGREES: [1, degrees] }),
-  goto: (target: string | any) => recordBlock("motion", "goto", { TO: [1, target] }),
-  gotoxy: (x: number | any, y: number | any) => recordBlock("motion", "gotoxy", { X: [1, x], Y: [1, y] }),
-  glideto: (secs: number | any, target: string | any) =>
-    recordBlock("motion", "glideto", { SECS: [1, secs], TO: [1, target] }),
-  glide: (secs: number | any, x: number | any, y: number | any) =>
-    recordBlock("motion", "glidesecstoxy", { SECS: [1, secs], X: [1, x], Y: [1, y] }),
-  pointindirection: (direction: number | any) =>
-    recordBlock("motion", "pointindirection", { DIRECTION: [1, direction] }),
-  pointtowards: (target: string | any) => recordBlock("motion", "pointtowards", { TOWARDS: [1, target] }),
-  changex: (dx: number | any) => recordBlock("motion", "changexby", { DX: [1, dx] }),
-  setx: (x: number | any) => recordBlock("motion", "setx", { X: [1, x] }),
-  changey: (dy: number | any) => recordBlock("motion", "changeyby", { DY: [1, dy] }),
-  sety: (y: number | any) => recordBlock("motion", "sety", { Y: [1, y] }),
-  ifonedgebounce: () => recordBlock("motion", "ifonedgebounce", {}),
-  setrotationstyle: (style: "left-right" | "don't rotate" | "all around" | any) =>
-    recordBlock("motion", "setrotationstyle", {}, { STYLE: [style, null] }),
-  x: () => recordBlock("motion", "xposition", {}),
-  y: () => recordBlock("motion", "yposition", {}),
-  direction: () => recordBlock("motion", "direction", {}),
+/**
+ * Convert opcode method name to camelCase
+ * e.g., "movesteps" -> "movesteps", "gotoxy" -> "gotoxy"
+ */
+function toCamelCase(str: string): string {
+  return str.toLowerCase()
 }
 
-export const looks = {
-  sayforsecs: (message: string | any, secs: number | any) =>
-    recordBlock("looks", "sayforsecs", { MESSAGE: [1, message], SECS: [1, secs] }),
-  say: (message: string | any) => recordBlock("looks", "say", { MESSAGE: [1, message] }),
-  thinkforsecs: (message: string | any, secs: number | any) =>
-    recordBlock("looks", "thinkforsecs", { MESSAGE: [1, message], SECS: [1, secs] }),
-  think: (message: string | any) => recordBlock("looks", "think", { MESSAGE: [1, message] }),
-  switchcostume: (costume: string | number | any) => recordBlock("looks", "switchcostumeto", { COSTUME: [1, costume] }),
-  nextcostume: () => recordBlock("looks", "nextcostume", {}),
-  switchbackdrop: (backdrop: string | number | any) =>
-    recordBlock("looks", "switchbackdropto", { BACKDROP: [1, backdrop] }),
-  nextbackdrop: () => recordBlock("looks", "nextbackdrop", {}),
-  changesize: (change: number | any) => recordBlock("looks", "changesizeby", { CHANGE: [1, change] }),
-  setsize: (size: number | any) => recordBlock("looks", "setsizeto", { SIZE: [1, size] }),
-  changeeffect: (
-    effect: "COLOR" | "FISHEYE" | "WHIRL" | "PIXELATE" | "MOSAIC" | "BRIGHTNESS" | "GHOST" | any,
-    change: number | any,
-  ) => recordBlock("looks", "changeeffectby", { CHANGE: [1, change] }, { EFFECT: [effect, null] }),
-  seteffectto: (
-    effect: "COLOR" | "FISHEYE" | "WHIRL" | "PIXELATE" | "MOSAIC" | "BRIGHTNESS" | "GHOST" | any,
-    value: number | any,
-  ) => recordBlock("looks", "seteffectto", { VALUE: [1, value] }, { EFFECT: [effect, null] }),
-  cleareffects: () => recordBlock("looks", "cleargraphiceffects", {}),
-  show: () => recordBlock("looks", "show", {}),
-  hide: () => recordBlock("looks", "hide", {}),
-  setlayer: (layer: "front" | "back" | any) =>
-    recordBlock("looks", "goforwardbackwardlayers", {}, { FORWARD_BACKWARD: [layer, null] }),
-  changelayer: (direction: "forward" | "backward" | any, num: number | any) =>
-    recordBlock("looks", "goforwardbackwardlayers", { NUM: [1, num] }, { FORWARD_BACKWARD: [direction, null] }),
-  costumename: () => recordBlock("looks", "costumenumbername", {}, { NUMBER_NAME: ["name", null] }),
-  costumenumber: () => recordBlock("looks", "costumenumbername", {}, { NUMBER_NAME: ["number", null] }),
-  backdropname: () => recordBlock("looks", "backdropnumbername", {}, { NUMBER_NAME: ["name", null] }),
-  backdropnumber: () => recordBlock("looks", "backdropnumbername", {}, { NUMBER_NAME: ["number", null] }),
-  size: () => recordBlock("looks", "size", {}),
+/**
+ * Get the namespace from a full opcode
+ * e.g., "motion_movesteps" -> "motion"
+ */
+function getNamespace(opcode: string): string {
+  const idx = opcode.indexOf("_")
+  return idx !== -1 ? opcode.substring(0, idx) : ""
 }
 
-export const sound = {
-  playsound: (sound: string | any) => recordBlock("sound", "playsound", { SOUND: [1, sound] }),
-  playsoundawait: (sound: string | any) => recordBlock("sound", "playsoundawait", { SOUND: [1, sound] }),
-  stopallsounds: () => recordBlock("sound", "stopallsounds", {}),
-  changeeffect: (effect: "PITCH" | "PAN" | any, change: number | any) =>
-    recordBlock("sound", "changeeffectby", { CHANGE: [1, change] }, { EFFECT: [effect, null] }),
-  seteffect: (effect: "PITCH" | "PAN" | any, value: number | any) =>
-    recordBlock("sound", "seteffectto", { VALUE: [1, value] }, { EFFECT: [effect, null] }),
-  cleareffects: () => recordBlock("sound", "cleareffects", {}),
-  changevolume: (change: number | any) => recordBlock("sound", "changevolumeby", { CHANGE: [1, change] }),
-  setvolume: (volume: number | any) => recordBlock("sound", "setvolumeto", { VOLUME: [1, volume] }),
-  volume: () => recordBlock("sound", "volume", {}),
+/**
+ * Get the method name from a full opcode
+ * e.g., "motion_movesteps" -> "movesteps"
+ */
+function getMethodName(opcode: string): string {
+  const idx = opcode.indexOf("_")
+  return idx !== -1 ? opcode.substring(idx + 1) : opcode
 }
 
-export const event = {
-  start: () => recordBlock("event", "start", {}),
-  keypressed: (key: string | any) => recordBlock("event", "keypressed", { KEY: [1, key] }),
-  scenestart: (backdrop: string | any) => recordBlock("event", "scenestart", { BACKDROP: [1, backdrop] }),
-  thisspriteclicked: () => recordBlock("event", "thisspriteclicked", {}),
-  stageclicked: () => recordBlock("event", "stageclicked", {}),
-  onbroadcast: (message: string | any) => recordBlock("event", "onbroadcast", { MESSAGE: [1, message] }),
-  broadcast: (message: string | any) => recordBlock("event", "broadcast", { MESSAGE: [1, message] }),
-  broadcastawait: (message: string | any) => recordBlock("event", "broadcastawait", { MESSAGE: [1, message] }),
-}
+/**
+ * Create a runtime function for an opcode definition
+ */
+function createBlockFunction(def: OpcodeDefinition): (...args: any[]) => any {
+  const { opcode, type, args: opcodeArgs, fields } = def
+  const namespace = getNamespace(opcode)
+  const methodName = getMethodName(opcode)
 
-export const control = {
-  wait: (duration: number | any) => recordBlock("control", "wait", { DURATION: [1, duration] }),
-  until: (condition: any, callback: () => any) => {
-    const conditionId = typeof condition === "string" ? condition : condition
-    const blockId = recordBlock("control", "wait_until", { CONDITION: [2, conditionId] })
-    return blockId
-  },
-  repeat: (times: any, callback: () => any) => {
-    const timesId = typeof times === "string" ? times : times
-    const blockId = recordBlock("control", "repeat", { TIMES: [1, timesId] })
-    // Execute callback to record nested blocks
-    const ctx = getCurrentBlockContext()
-    ctx.parentBlock = blockId
-    if (typeof callback == "function") callback()
-    ctx.parentBlock = null
-    return blockId
-  },
-  forever: (callback: () => any) => {
-    const blockId = recordBlock("control", "forever", {})
-    const ctx = getCurrentBlockContext()
-    ctx.parentBlock = blockId
-    if (typeof callback == "function") callback()
-    ctx.parentBlock = null
-    return blockId
-  },
-  if_else: (condition: any, thenCallback: () => any, elseCallback?: () => any) => {
-    const conditionId = typeof condition === "string" ? condition : condition
-    const blockId = recordBlock("control", "if_else", { CONDITION: [2, conditionId] })
-    const ctx = getCurrentBlockContext()
+  // Special handling for control blocks (with callbacks)
+  if (namespace === "control") {
+    return createControlBlockFunction(def)
+  }
 
-    // Record THEN branch
-    ctx.parentBlock = blockId
-    ctx.substackType = "SUBSTACK"
-    if (typeof thenCallback == "function") thenCallback()
+  // Special handling for data blocks (variable/list operations)
+  if (namespace === "data") {
+    return createDataBlockFunction(def)
+  }
 
-    // Record ELSE branch if exists
-    if (elseCallback && typeof elseCallback == "function") {
-      ctx.substackType = "SUBSTACK2"
-      if (typeof elseCallback == "function") elseCallback()
+  // Special handling for procedures
+  if (namespace === "procedures") {
+    return createProceduresBlockFunction(def)
+  }
+
+  // Special handling for argument
+  if (namespace === "argument") {
+    return createArgumentBlockFunction(def)
+  }
+
+  // Standard block function
+  return (...callArgs: any[]) => {
+    const inputs: Record<string, any> = {}
+    const blockFields: Record<string, any> = {}
+
+    let argIndex = 0
+
+    // Process opcode args
+    for (const arg of opcodeArgs) {
+      if (arg.type === "field") {
+        // Field argument - store as field
+        const value = callArgs[argIndex] ?? ""
+        blockFields[arg.name] = [value, null]
+      } else if (arg.type === "substack") {
+        // Substack handled by control blocks
+      } else {
+        // Regular input (any, bool)
+        const value = callArgs[argIndex]
+        inputs[arg.name] = [1, value]
+      }
+      argIndex++
     }
 
-    ctx.parentBlock = null
-    ctx.substackType = null
-    return blockId
-  },
-  _if: (condition: any, callback: () => any) => {
-    const conditionId = typeof condition === "string" ? condition : condition
-    const blockId = recordBlock("control", "if", { CONDITION: [2, conditionId] })
-    const ctx = getCurrentBlockContext()
-    ctx.parentBlock = blockId
-    ctx.substackType = "SUBSTACK"
-    if (typeof callback == "function") callback()
-    ctx.parentBlock = null
-    ctx.substackType = null
-    return blockId
-  },
-  stop: (option: "all" | "this script" | "other scripts in sprite" | any) =>
-    recordBlock("control", "stop", {}, { OPTION: [option, null] }),
-  clone: (target: string | any) => recordBlock("control", "clone", { TARGET: [1, target] }),
-  deleteself: () => recordBlock("control", "deleteself", {}),
-  onclone: () => recordBlock("control", "onclone", {}),
+    // Process predefined fields
+    if (fields) {
+      for (const [fieldName, fieldValue] of Object.entries(fields)) {
+        blockFields[fieldName] = [fieldValue, null]
+      }
+    }
+
+    return recordBlock(namespace, methodName, inputs, blockFields)
+  }
 }
 
-export const sensing = {
-  touchingobject: (object: string | any) => recordBlock("sensing", "touchingobject", { OBJECT: [1, object] }),
-  touchingcolor: (color: string | any) => recordBlock("sensing", "touchingcolor", { COLOR: [1, color] }),
-  colortouchingcolor: (color1: string | any, color2: string | any) =>
-    recordBlock("sensing", "colortouchingcolor", { COLOR1: [1, color1], COLOR2: [1, color2] }),
-  distanceto: (target: string | any) => recordBlock("sensing", "distanceto", { TARGET: [1, target] }),
-  ask: (question: string | any) => recordBlock("sensing", "ask", { QUESTION: [1, question] }),
-  askanswer: () => recordBlock("sensing", "askanswer", {}),
-  iskeypressed: (key: string | any) => recordBlock("sensing", "iskeypressed", { KEY: [1, key] }),
-  mousex: () => recordBlock("sensing", "mousex", {}),
-  mousey: () => recordBlock("sensing", "mousey", {}),
-  mousedown: () => recordBlock("sensing", "mousedown", {}),
-  setdragmode: (mode: "draggable" | "not draggable" | any) =>
-    recordBlock("sensing", "setdragmode", {}, { MODE: [mode, null] }),
-  loudness: () => recordBlock("sensing", "loudness", {}),
-  timer: () => recordBlock("sensing", "timer", {}),
-  resettimer: () => recordBlock("sensing", "resettimer", {}),
-  of: (property: string | any, object: string | any) =>
-    recordBlock("sensing", "of", { PROPERTY: [1, property], OBJECT: [1, object] }),
-  current: (unit: "YEAR" | "MONTH" | "DATE" | "DAYOFWEEK" | "HOUR" | "MINUTE" | "SECOND" | any) =>
-    recordBlock("sensing", "current", {}, { UNIT: [unit, null] }),
-  dayssince2000: () => recordBlock("sensing", "dayssince2000", {}),
-  username: () => recordBlock("sensing", "username", {}),
+/**
+ * Create control block functions with callback support
+ */
+function createControlBlockFunction(def: OpcodeDefinition): (...args: any[]) => any {
+  const { opcode, args: opcodeArgs } = def
+  const namespace = "control"
+  const methodName = getMethodName(opcode)
+
+  switch (methodName) {
+    case "repeat":
+      return (times: any, callback: () => any) => {
+        const blockId = recordBlock(namespace, "repeat", { TIMES: [1, times] })
+        const ctx = getCurrentBlockContext()
+        ctx.parentBlock = blockId
+        ctx.substackType = "SUBSTACK"
+        if (typeof callback === "function") callback()
+        ctx.parentBlock = null
+        ctx.substackType = null
+        return blockId
+      }
+
+    case "forever":
+      return (callback: () => any) => {
+        const blockId = recordBlock(namespace, "forever", {})
+        const ctx = getCurrentBlockContext()
+        ctx.parentBlock = blockId
+        ctx.substackType = "SUBSTACK"
+        if (typeof callback === "function") callback()
+        ctx.parentBlock = null
+        ctx.substackType = null
+        return blockId
+      }
+
+    case "if":
+      return (condition: any, callback: () => any) => {
+        const conditionId = typeof condition === "string" ? condition : condition
+        const blockId = recordBlock(namespace, "if", { CONDITION: [2, conditionId] })
+        const ctx = getCurrentBlockContext()
+        ctx.parentBlock = blockId
+        ctx.substackType = "SUBSTACK"
+        if (typeof callback === "function") callback()
+        ctx.parentBlock = null
+        ctx.substackType = null
+        return blockId
+      }
+
+    case "if_else":
+      return (condition: any, thenCallback: () => any, elseCallback?: () => any) => {
+        const conditionId = typeof condition === "string" ? condition : condition
+        const blockId = recordBlock(namespace, "if_else", { CONDITION: [2, conditionId] })
+        const ctx = getCurrentBlockContext()
+
+        // Record THEN branch
+        ctx.parentBlock = blockId
+        ctx.substackType = "SUBSTACK"
+        if (typeof thenCallback === "function") thenCallback()
+
+        // Record ELSE branch if exists
+        if (elseCallback && typeof elseCallback === "function") {
+          ctx.substackType = "SUBSTACK2"
+          elseCallback()
+        }
+
+        ctx.parentBlock = null
+        ctx.substackType = null
+        return blockId
+      }
+
+    case "repeat_until":
+      return (condition: any, callback: () => any) => {
+        const conditionId = typeof condition === "string" ? condition : condition
+        const blockId = recordBlock(namespace, "repeat_until", { CONDITION: [2, conditionId] })
+        const ctx = getCurrentBlockContext()
+        ctx.parentBlock = blockId
+        ctx.substackType = "SUBSTACK"
+        if (typeof callback === "function") callback()
+        ctx.parentBlock = null
+        ctx.substackType = null
+        return blockId
+      }
+
+    case "wait_until":
+      return (condition: any) => {
+        const conditionId = typeof condition === "string" ? condition : condition
+        return recordBlock(namespace, "wait_until", { CONDITION: [2, conditionId] })
+      }
+
+    default:
+      // Standard control block
+      return (...callArgs: any[]) => {
+        const inputs: Record<string, any> = {}
+        const blockFields: Record<string, any> = {}
+
+        let argIndex = 0
+        for (const arg of opcodeArgs) {
+          if (arg.type === "field") {
+            const value = callArgs[argIndex] ?? ""
+            blockFields[arg.name] = [value, null]
+          } else {
+            const value = callArgs[argIndex]
+            inputs[arg.name] = [1, value]
+          }
+          argIndex++
+        }
+
+        return recordBlock(namespace, methodName, inputs, blockFields)
+      }
+  }
 }
 
-export const operator = {
-  add: (a: any, b: any) => recordBlock("operator", "add", { A: [1, a], B: [1, b] }),
-  subtract: (a: any, b: any) => recordBlock("operator", "subtract", { A: [1, a], B: [1, b] }),
-  multiply: (a: any, b: any) => recordBlock("operator", "multiply", { A: [1, a], B: [1, b] }),
-  divide: (a: any, b: any) => recordBlock("operator", "divide", { A: [1, a], B: [1, b] }),
-  random: (from: number | any, to: number | any) => recordBlock("operator", "random", { FROM: [1, from], TO: [1, to] }),
-  gt: (a: any, b: any) => recordBlock("operator", "gt", { A: [1, a], B: [1, b] }),
-  lt: (a: any, b: any) => recordBlock("operator", "lt", { A: [1, a], B: [1, b] }),
-  equals: (a: any, b: any) => recordBlock("operator", "equals", { A: [1, a], B: [1, b] }),
-  and: (a: boolean | any, b: boolean | any) => recordBlock("operator", "and", { A: [1, a], B: [1, b] }),
-  or: (a: boolean | any, b: boolean | any) => recordBlock("operator", "or", { A: [1, a], B: [1, b] }),
-  not: (operand?: boolean | any) => recordBlock("operator", "not", { OPERAND: [1, operand] }),
-  join: (str1: string | any, str2: string | any) =>
-    recordBlock("operator", "join", { STR1: [1, str1], STR2: [1, str2] }),
-  letterof: (index: number | any, str: string | any) =>
-    recordBlock("operator", "letterof", { INDEX: [1, index], STR: [1, str] }),
-  length: (str: string | any) => recordBlock("operator", "length", { STR: [1, str] }),
-  contains: (str1: string | any, str2: string | any) =>
-    recordBlock("operator", "contains", { STR1: [1, str1], STR2: [1, str2] }),
-  mod: (a: number | any, b: number | any) => recordBlock("operator", "mod", { A: [1, a], B: [1, b] }),
-  round: (num: number | any) => recordBlock("operator", "round", { NUM: [1, num] }),
-  mathop: (operator: string | any, num: number | any) =>
-    recordBlock("operator", "mathop", { OPERATOR: [1, operator], NUM: [1, num] }),
+/**
+ * Create data block functions with variable/list context support
+ */
+function createDataBlockFunction(def: OpcodeDefinition): (...args: any[]) => any {
+  const { opcode, args: opcodeArgs, fields } = def
+  const namespace = "data"
+  const methodName = getMethodName(opcode)
+
+  switch (methodName) {
+    case "variable":
+      return (name: string | any) => {
+        const ctx = getCurrentBlockContext()
+        const varId = ctx.getVariableId(name)
+        return recordBlock(namespace, "variable", {}, { VARIABLE: [name, varId] })
+      }
+
+    case "setvariableto":
+      return (name: string | any, value: any) => {
+        const ctx = getCurrentBlockContext()
+        const varId = ctx.getVariableId(name)
+        return recordBlock(namespace, "setvariableto", { VALUE: [1, value] }, { VARIABLE: [name, varId] })
+      }
+
+    case "changevariableby":
+      return (name: string | any, value: number | any) => {
+        const ctx = getCurrentBlockContext()
+        const varId = ctx.getVariableId(name)
+        return recordBlock(namespace, "changevariableby", { VALUE: [1, value] }, { VARIABLE: [name, varId] })
+      }
+
+    case "showvariable":
+    case "hidevariable":
+      return (name: string | any) => {
+        return recordBlock(namespace, methodName, {}, { VARIABLE: [name, null] })
+      }
+
+    case "listcontents":
+      return (name: string | any) => {
+        const ctx = getCurrentBlockContext()
+        const listId = ctx.getListId(name)
+        return recordBlock(namespace, "listcontents", {}, { LIST: [name, listId] })
+      }
+
+    case "addtolist":
+      return (item: any, name: string | any) => {
+        const ctx = getCurrentBlockContext()
+        const listId = ctx.getListId(name)
+        return recordBlock(namespace, "addtolist", { ITEM: [1, item] }, { LIST: [name, listId] })
+      }
+
+    case "deleteoflist":
+      return (index: number | any, name: string | any) => {
+        const ctx = getCurrentBlockContext()
+        const listId = ctx.getListId(name)
+        return recordBlock(namespace, "deleteoflist", { INDEX: [1, index] }, { LIST: [name, listId] })
+      }
+
+    case "deletealloflist":
+      return (name: string | any) => {
+        const ctx = getCurrentBlockContext()
+        const listId = ctx.getListId(name)
+        return recordBlock(namespace, "deletealloflist", {}, { LIST: [name, listId] })
+      }
+
+    case "insertatlist":
+      return (item: any, index: number | any, name: string | any) => {
+        const ctx = getCurrentBlockContext()
+        const listId = ctx.getListId(name)
+        return recordBlock(namespace, "insertatlist", { ITEM: [1, item], INDEX: [1, index] }, { LIST: [name, listId] })
+      }
+
+    case "replaceitemoflist":
+      return (index: number | any, name: string | any, item: any) => {
+        const ctx = getCurrentBlockContext()
+        const listId = ctx.getListId(name)
+        return recordBlock(namespace, "replaceitemoflist", { INDEX: [1, index], ITEM: [1, item] }, { LIST: [name, listId] })
+      }
+
+    case "itemoflist":
+      return (index: number | any, name: string | any) => {
+        const ctx = getCurrentBlockContext()
+        const listId = ctx.getListId(name)
+        return recordBlock(namespace, "itemoflist", { INDEX: [1, index] }, { LIST: [name, listId] })
+      }
+
+    case "itemnumoflist":
+      return (item: any, name: string | any) => {
+        const ctx = getCurrentBlockContext()
+        const listId = ctx.getListId(name)
+        return recordBlock(namespace, "itemnumoflist", { ITEM: [1, item] }, { LIST: [name, listId] })
+      }
+
+    case "lengthoflist":
+      return (name: string | any) => {
+        const ctx = getCurrentBlockContext()
+        const listId = ctx.getListId(name)
+        return recordBlock(namespace, "lengthoflist", {}, { LIST: [name, listId] })
+      }
+
+    case "listcontainsitem":
+      return (name: string | any, item: any) => {
+        const ctx = getCurrentBlockContext()
+        const listId = ctx.getListId(name)
+        return recordBlock(namespace, "listcontainsitem", { ITEM: [1, item] }, { LIST: [name, listId] })
+      }
+
+    case "showlist":
+    case "hidelist":
+      return (name: string | any) => {
+        return recordBlock(namespace, methodName, {}, { LIST: [name, null] })
+      }
+
+    default:
+      // Standard data block
+      return (...callArgs: any[]) => {
+        const inputs: Record<string, any> = {}
+        const blockFields: Record<string, any> = {}
+
+        let argIndex = 0
+        for (const arg of opcodeArgs) {
+          if (arg.type === "field") {
+            const value = callArgs[argIndex] ?? ""
+            blockFields[arg.name] = [value, null]
+          } else {
+            const value = callArgs[argIndex]
+            inputs[arg.name] = [1, value]
+          }
+          argIndex++
+        }
+
+        return recordBlock(namespace, methodName, inputs, blockFields)
+      }
+  }
 }
 
-export const data = {
-  variable: (name: string | any) => {
-    const ctx = getCurrentBlockContext()
-    const varId = ctx.getVariableId(name)
-    return recordBlock("data", "variable", {}, { VARIABLE: [name, varId] })
-  },
-  setvariableto: (value: any, name: string | any) => {
-    const ctx = getCurrentBlockContext()
-    const varId = ctx.getVariableId(name)
-    const valueId = typeof value === "string" ? value : value
-    return recordBlock("data", "setvariableto", { VALUE: [1, valueId] }, { VARIABLE: [name, varId] })
-  },
-  changevariable: (value: number | any, name: string | any) => {
-    const ctx = getCurrentBlockContext()
-    const varId = ctx.getVariableId(name)
-    return recordBlock("data", "changevariableby", { VALUE: [1, value] }, { VARIABLE: [name, varId] })
-  },
-  showvariable: (name: string | any) => recordBlock("data", "showvariable", { VARIABLE: [1, name] }),
-  hidevariable: (name: string | any) => recordBlock("data", "hidevariable", { VARIABLE: [1, name] }),
-  listcontents: (name: string | any) => recordBlock("data", "listcontents", { LIST: [1, name] }),
-  addtolist: (item: any, list: string | any) => recordBlock("data", "addtolist", { ITEM: [1, item], LIST: [1, list] }),
-  deleteoflist: (index: number | any, list: string | any) =>
-    recordBlock("data", "deleteoflist", { INDEX: [1, index], LIST: [1, list] }),
-  deletealloflist: (list: string | any) => recordBlock("data", "deletealloflist", { LIST: [1, list] }),
-  insertatlist: (item: any, index: number | any, list: string | any) =>
-    recordBlock("data", "insertatlist", { ITEM: [1, item], INDEX: [1, index], LIST: [1, list] }),
-  replaceitemoflist: (index: number | any, list: string | any, item: any) =>
-    recordBlock("data", "replaceitemoflist", { INDEX: [1, index], LIST: [1, list], ITEM: [1, item] }),
-  itemoflist: (index: number | any, list: string | any) =>
-    recordBlock("data", "itemoflist", { INDEX: [1, index], LIST: [1, list] }),
-  itemnumoflist: (list: string | any, item: any) =>
-    recordBlock("data", "itemnumoflist", { LIST: [1, list], ITEM: [1, item] }),
-  lengthoflist: (list: string | any) => recordBlock("data", "lengthoflist", { LIST: [1, list] }),
-  listcontainsitem: (list: string | any, item: any) =>
-    recordBlock("data", "listcontainsitem", { LIST: [1, list], ITEM: [1, item] }),
-  showlist: (list: string | any) => recordBlock("data", "showlist", { LIST: [1, list] }),
-  hidelist: (list: string | any) => recordBlock("data", "hidelist", { LIST: [1, list] }),
+/**
+ * Create procedures block functions
+ */
+function createProceduresBlockFunction(def: OpcodeDefinition): (...args: any[]) => any {
+  const methodName = getMethodName(def.opcode)
+
+  switch (methodName) {
+    case "call":
+      return (proccode?: string | any, ...args: any[]) => {
+        const inputs: Record<string, any> = {}
+        const blockFields: Record<string, any> = {}
+
+        if (proccode) {
+          blockFields.proccode = [proccode, null]
+        }
+
+        // Add arguments as inputs
+        args.forEach((arg, index) => {
+          inputs[`arg${index}`] = [1, arg]
+        })
+
+        return recordBlock("procedures", "call", inputs, blockFields)
+      }
+
+    case "definition":
+      return (proccode: string | any) => {
+        return recordBlock("procedures", "definition", {}, { proccode: [proccode, null] })
+      }
+
+    default:
+      return (...callArgs: any[]) => {
+        return recordBlock("procedures", methodName, {})
+      }
+  }
 }
 
-export const pen = {
-  clear: () => recordBlock("pen", "clear", {}),
-  stamp: () => recordBlock("pen", "stamp", {}),
-  pendown: () => recordBlock("pen", "pendown", {}),
-  penup: () => recordBlock("pen", "penup", {}),
-  setPenColorToColor: (color: string | any) => recordBlock("pen", "setpencolortocolor", { COLOR: [1, color] }),
-  setparam: (param: string | any, value: number | any) =>
-    recordBlock("pen", "setparam", { PARAM: [1, param], VALUE: [1, value] }),
-  changeparam: (param: string | any, value: number | any) =>
-    recordBlock("pen", "changeparam", { PARAM: [1, param], VALUE: [1, value] }),
-  setPenSizeTo: (size: number | any) => recordBlock("pen", "setpensizeto", { SIZE: [1, size] }),
-  changesize: (change: number | any) => recordBlock("pen", "changesize", { CHANGE: [1, change] }),
+/**
+ * Create argument block functions
+ */
+function createArgumentBlockFunction(def: OpcodeDefinition): (...args: any[]) => any {
+  const methodName = getMethodName(def.opcode)
+
+  switch (methodName) {
+    case "reporter_string_number":
+      return (name: string | any) => {
+        return recordBlock("argument", "reporter_string_number", {}, { VALUE: [name, null] })
+      }
+
+    case "reporter_boolean":
+      return (name: string | any) => {
+        return recordBlock("argument", "reporter_boolean", {}, { VALUE: [name, null] })
+      }
+
+    default:
+      return (...callArgs: any[]) => {
+        return recordBlock("argument", methodName, {})
+      }
+  }
 }
 
-export const music = {
-  playdrum: (drum: number | any, beats: number | any) =>
-    recordBlock("music", "playdrum", { DRUM: [1, drum], BEATS: [1, beats] }),
-  restforbeats: (beats: number | any) => recordBlock("music", "restforbeats", { BEATS: [1, beats] }),
-  playnote: (note: number | any, beats: number | any) =>
-    recordBlock("music", "playnote", { NOTE: [1, note], BEATS: [1, beats] }),
-  setinstrument: (instrument: number | any) => recordBlock("music", "setinstrument", { INSTRUMENT: [1, instrument] }),
-  settempo: (tempo: number | any) => recordBlock("music", "settempo", { TEMPO: [1, tempo] }),
-  changetempo: (change: number | any) => recordBlock("music", "changetempo", { CHANGE: [1, change] }),
-  gettempo: () => recordBlock("music", "gettempo", {}),
+/**
+ * Build runtime namespace from opcode definitions
+ * Uses the definition key as method name (e.g., "_if") to match definitions.ts
+ * This properly handles JS reserved words like "if" -> "_if"
+ */
+function buildRuntimeNamespace(namespaceName: string): Record<string, (...args: any[]) => any> {
+  const namespace: Record<string, (...args: any[]) => any> = {}
+  const namespaceDefs = SCRATCH_OPCODES[namespaceName]
+
+  if (!namespaceDefs) {
+    return namespace
+  }
+
+  for (const [key, def] of Object.entries(namespaceDefs)) {
+    // Use the definition key as method name (with first char lowercase)
+    // e.g., "_if" stays as "_if", "moveSteps" becomes "moveSteps"
+    const methodKey = key.charAt(0).toLowerCase() + key.slice(1)
+    namespace[methodKey] = createBlockFunction(def)
+  }
+
+  return namespace
 }
 
+// Export built namespaces
+export const motion = buildRuntimeNamespace("motion")
+export const looks = buildRuntimeNamespace("looks")
+export const sound = buildRuntimeNamespace("sound")
+export const event = buildRuntimeNamespace("event")
+export const control = buildRuntimeNamespace("control")
+export const sensing = buildRuntimeNamespace("sensing")
+export const operator = buildRuntimeNamespace("operator")
+export const data = buildRuntimeNamespace("data")
+export const pen = buildRuntimeNamespace("pen")
+export const music = buildRuntimeNamespace("music")
+
+// Procedures and argument are special
 export const procedures = {
   call: (proccode?: string | any, ...args: any[]) => {
     const inputs: Record<string, any> = {}
-    const fields: Record<string, any> = { NAME: [proccode, null] }
+    const fields: Record<string, any> = {}
 
-    // Add arguments as inputs
-    if (args.length > 0) {
-      fields.RESTS = args
+    if (proccode) {
+      fields.proccode = [proccode, null]
     }
 
+    args.forEach((arg, index) => {
+      inputs[`arg${index}`] = [1, arg]
+    })
+
     return recordBlock("procedures", "call", inputs, fields)
+  },
+  definition: (proccode: string | any) => {
+    return recordBlock("procedures", "definition", {}, { proccode: [proccode, null] })
   },
 }
 
 export const argument = {
+  reporter: (name: string | any) => {
+    return recordBlock("argument", "reporter", {}, { VALUE: [name, null] })
+  },
   reporter_string_number: (name: string | any) => {
     return recordBlock("argument", "reporter_string_number", {}, { VALUE: [name, null] })
   },
+  reporter_boolean: (name: string | any) => {
+    return recordBlock("argument", "reporter_boolean", {}, { VALUE: [name, null] })
+  },
+}
+
+/**
+ * Get runtime function by full opcode
+ * Useful for dynamic block execution
+ */
+export function getRuntimeFunction(opcode: string): ((...args: any[]) => any) | null {
+  const def = OPCODE_MAP.get(opcode)
+  if (!def) return null
+
+  const namespace = getNamespace(opcode)
+  const methodName = getMethodName(opcode)
+  const methodKey = methodName.charAt(0).toLowerCase() + methodName.slice(1)
+
+  // Get namespace object
+  const namespaceObj = (globalThis as any).__scratchRuntime?.[namespace]
+  if (namespaceObj && typeof namespaceObj[methodKey] === "function") {
+    return namespaceObj[methodKey]
+  }
+
+  return null
+}
+
+// Register runtime for dynamic access
+(globalThis as any).__scratchRuntime = {
+  motion,
+  looks,
+  sound,
+  event,
+  control,
+  sensing,
+  operator,
+  data,
+  pen,
+  music,
+  procedures,
+  argument,
 }

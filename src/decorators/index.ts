@@ -5,6 +5,7 @@ export interface BlockMetadata {
   opcode: string
   type: "hat" | "stack" | "reporter" | "boolean"
   category?: string
+  proccode?: string // For custom procedures
 }
 
 export interface VarMetadata {
@@ -26,14 +27,15 @@ const listMetadataMap = new Map<any, ListMetadata[]>()
  * Decorator to mark a method as a Scratch block
  * @param opcode - The Scratch opcode (e.g., "motion_movesteps")
  * @param type - Block type: "hat" (event), "stack" (command), "reporter" (value), "boolean"
+ * @param proccode - For custom procedures, the proccode identifier
  */
-export function blockExport(opcode: string, type: BlockMetadata["type"] = "stack") {
+export function blockExport(opcode: string, type: BlockMetadata["type"] = "stack", proccode?: string) {
   return (target: any, propertyKey: string, descriptor?: PropertyDescriptor) => {
     if (!blockMetadataMap.has(target.constructor)) {
       blockMetadataMap.set(target.constructor, new Map())
     }
     const metadata = blockMetadataMap.get(target.constructor)!
-    metadata.set(propertyKey, { opcode, type })
+    metadata.set(propertyKey, { opcode, type, proccode })
     return descriptor
   }
 }

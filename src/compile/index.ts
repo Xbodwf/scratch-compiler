@@ -2,16 +2,27 @@ import "reflect-metadata"
 import fs from "node:fs"
 import path from "node:path"
 import { createRequire } from "node:module"
+import { fileURLToPath } from "node:url"
 import type { CompilerConfig, ScratchProject, Sprite } from "../types/index.js"
 import JSZip from "jszip"
 import { parse } from "jsonc-parser"
 import ts from "typescript"
 import { startBlockRecording, stopBlockRecording } from "../runtime/blockRecorder.js"
 import * as scratchBlocksModule from "../runtime/scratchBlocks.js"
+
+// ESM-compatible __dirname
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 import * as decoratorsModule from "../decorators/index.js"
 import { getBlockMetadata } from "../decorators/index.js"
 
-async function loadAndExecuteSprite(spritePath: string, indexJsonPath?: string, projectRoot?: string): Promise<Sprite> {
+async function loadAndExecuteSprite(
+  spritePath: string,
+  indexJsonPath?: string,
+  projectRoot?: string,
+  globalVariables?: Record<string, any>,
+  globalLists?: Record<string, any>,
+): Promise<Sprite> {
   // Read index.json for sprite metadata if it exists
   let spriteData: Sprite
 
@@ -69,12 +80,16 @@ async function loadAndExecuteSprite(spritePath: string, indexJsonPath?: string, 
   const require = createRequire(indexTsPath)
 
   const originalRequire = require
+  
+  // Get absolute path to blockRecorder using __dirname (used by customRequire)
+  const blockRecorderPath = path.join(__dirname, "..", "runtime", "blockRecorder.js")
+  
   const customRequire = (id: string) => {
     // Handle scratchBlocks and decorators imports
-    if (id.includes("scratchBlocks")) {
+    if (id.includes("scratchBlocks") || id.includes("scratch-compiler") && id.includes("scratchBlocks")) {
       return scratchBlocksModule
     }
-    if (id.includes("decorators")) {
+    if (id.includes("decorators") || id.includes("scratch-compiler") && id.includes("decorators")) {
       return decoratorsModule
     }
 
@@ -104,8 +119,8 @@ async function loadAndExecuteSprite(spritePath: string, indexJsonPath?: string, 
 
             // Create a custom require for the wrapper that can load blockRecorder
             const wrapperCustomRequire = (wrapperId: string) => {
-              if (wrapperId.includes("blockRecorder")) {
-                return require("../runtime/blockRecorder.js")
+              if (wrapperId.includes("blockRecorder") || wrapperId.includes("scratch-compiler")) {
+                return require(blockRecorderPath)
               }
               return wrapperRequire(wrapperId)
             }
@@ -122,7 +137,8 @@ async function loadAndExecuteSprite(spritePath: string, indexJsonPath?: string, 
 
       // Fallback: create a simple proxy if wrapper not found
       console.warn(`[Warning] Extension wrapper not found for ${extensionName}, using fallback proxy`)
-      const { recordExtensionBlock } = require("../runtime/blockRecorder.js")
+      const blockRecorderModule = require(blockRecorderPath)
+      const { recordExtensionBlock } = blockRecorderModule
       return new Proxy(
         {},
         {
@@ -205,11 +221,37 @@ async function loadAndExecuteSprite(spritePath: string, indexJsonPath?: string, 
   // Execute each decorated method to record blocks
   const allBlocks: Record<string, any> = {}
 
+  // Convert sprite's variables from Scratch format { [id]: [name, value] } to { [name]: [id, value] }
+  const spriteVariables: Record<string, any> = {}
+  if (spriteData.variables) {
+    for (const [varId, varData] of Object.entries(spriteData.variables)) {
+      if (Array.isArray(varData)) {
+        const varName = varData[0]
+        spriteVariables[varName] = [varId, varData[1]]
+      }
+    }
+  }
+
+  const spriteLists: Record<string, any> = {}
+  if (spriteData.lists) {
+    for (const [listId, listData] of Object.entries(spriteData.lists)) {
+      if (Array.isArray(listData)) {
+        const listName = listData[0]
+        spriteLists[listName] = [listId, listData[1]]
+      }
+    }
+  }
+
+  // Merge sprite's variables with global variables (Stage variables)
+  // Sprite's local variables take precedence over global ones
+  const mergedVariables = { ...globalVariables, ...spriteVariables }
+  const mergedLists = { ...globalLists, ...spriteLists }
+
   for (const [methodName, metadata] of blockMetadata.entries()) {
     console.log(`[Executing] ${spriteData.name}.${methodName}() [${metadata.opcode}]`)
 
-    // Start recording blocks
-    startBlockRecording(spriteData.variables || {}, spriteData.lists || {})
+    // Start recording blocks with merged variables
+    startBlockRecording(mergedVariables, mergedLists)
 
     try {
       // Execute the method
@@ -266,6 +308,28 @@ export async function createCompileTask(configPath?: string): Promise<void> {
     stage.blocks = {}
   }
 
+  // Convert variables from Scratch format { [id]: [name, value] } to { [name]: [id, value] }
+  // This is needed for blockRecorder to find variables by name
+  const globalVariables: Record<string, any> = {}
+  if (stage.variables) {
+    for (const [varId, varData] of Object.entries(stage.variables)) {
+      if (Array.isArray(varData)) {
+        const varName = varData[0]
+        globalVariables[varName] = [varId, varData[1]]
+      }
+    }
+  }
+
+  const globalLists: Record<string, any> = {}
+  if (stage.lists) {
+    for (const [listId, listData] of Object.entries(stage.lists)) {
+      if (Array.isArray(listData)) {
+        const listName = listData[0]
+        globalLists[listName] = [listId, listData[1]]
+      }
+    }
+  }
+
   const srcDir = path.join(rootDir, "src")
   if (!fs.existsSync(srcDir)) {
     throw new Error(`src/ directory not found in ${rootDir}`)
@@ -287,6 +351,8 @@ export async function createCompileTask(configPath?: string): Promise<void> {
         spritePath,
         fs.existsSync(indexJsonPath) ? indexJsonPath : undefined,
         rootDir, // Pass project root for extension loading
+        globalVariables, // Pass stage's variables as global
+        globalLists, // Pass stage's lists as global
       )
       targets.push(spriteData)
       console.log(`[Loaded] ${spriteData.name}`)
@@ -295,12 +361,27 @@ export async function createCompileTask(configPath?: string): Promise<void> {
     }
   }
 
+  // Read extensions.json if exists
+  const extensionsJsonPath = path.join(rootDir, "extensions.json")
+  let extensionsConfig: Record<string, { localPath: string; originalUrl?: string }> = {}
+  if (fs.existsSync(extensionsJsonPath)) {
+    try {
+      extensionsConfig = JSON.parse(fs.readFileSync(extensionsJsonPath, "utf-8"))
+      console.log(`[Compile] Loaded ${Object.keys(extensionsConfig).length} extension(s) from extensions.json`)
+    } catch (e) {
+      console.warn(`[Warning] Failed to parse extensions.json:`, e)
+    }
+  }
+
   // Create project.json
+  const extensionIds = Object.keys(extensionsConfig)
   const project: ScratchProject = {
     targets,
     monitors: [],
-    extensions: [],
-    extensionURLs: {},
+    extensions: extensionIds,
+    extensionURLs: Object.fromEntries(
+      extensionIds.map((id) => [id, extensionsConfig[id].originalUrl || `extensions/${id}.js`]),
+    ),
     meta: {
       semver: "3.0.0",
       vm: "0.2.0",
@@ -334,6 +415,19 @@ export async function createCompileTask(configPath?: string): Promise<void> {
         const assetData = fs.readFileSync(assetPath)
         zip.file(sound.md5ext, assetData)
       }
+    }
+  }
+
+  // Add extension files
+  for (const [extId, extConfig] of Object.entries(extensionsConfig)) {
+    const extPath = path.join(rootDir, extConfig.localPath)
+    if (fs.existsSync(extPath)) {
+      const extData = fs.readFileSync(extPath)
+      // Store extension in extensions folder within the sb3
+      zip.file(`extensions/${extId}.js`, extData)
+      console.log(`[Compile] Added extension: ${extId}`)
+    } else {
+      console.warn(`[Warning] Extension file not found: ${extPath}`)
     }
   }
 
